@@ -6,19 +6,29 @@ export default function NutritionTable() {
   const [jsonData, setJsonData] = useState(null);
 
   useEffect(() => {
-    const iframe = window.parent.document.querySelector("iframe");
-    const rawValue = iframe?.getAttribute("sc_value") || "{}";
-    const parsed = JSON.parse(rawValue);
-    setJsonData(parsed);
-    setFields(parsed.fields || []);
+    // Use postMessage to request field data from Sitecore
+    window.parent.postMessage({ type: "get-sc-value" }, "*");
+
+    const listener = (event) => {
+      if (!event.data || event.data.type !== "sc-value-response") return;
+      try {
+        const parsed = JSON.parse(event.data.value || "{}");
+        setJsonData(parsed);
+        setFields(parsed.fields || []);
+      } catch (err) {
+        console.error("Failed to parse Sitecore field value", err);
+      }
+    };
+
+    window.addEventListener("message", listener);
+    return () => window.removeEventListener("message", listener);
   }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
       if (!jsonData) return;
       const updated = JSON.stringify({ ...jsonData, fields });
-      const iframe = window.parent.document.querySelector("iframe");
-      iframe?.setAttribute("sc_value", updated);
+      window.parent.postMessage({ type: "sitecore-field-update", data: updated }, "*");
     }, 1000);
     return () => clearInterval(interval);
   }, [fields, jsonData]);
