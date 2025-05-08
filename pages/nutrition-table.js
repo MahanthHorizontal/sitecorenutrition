@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Head from "next/head";
 
+
 export default function NutritionTable() {
   const [jsonData, setJsonData] = useState(null);
   const [fields, setFields] = useState([]);
@@ -10,14 +11,27 @@ export default function NutritionTable() {
     window.parent.postMessage({ type: "get-sc-value" }, "*");
 
     const handleMessage = (event) => {
-      if (event.data?.type === "sc-value-response") {
-        try {
-          const parsed = JSON.parse(event.data.value);
-          setJsonData(parsed);
-          setFields(parsed.fields || []);
-        } catch (err) {
-          console.error("Invalid Sitecore value received:", err);
-        }
+      if (event.origin !== "https://xmcloudcm.localhost") return;
+      if (!event.data || typeof event.data !== 'object') return;
+
+      switch (event.data.type) {
+        case "sc-value-response":
+          try {
+            const parsed = JSON.parse(event.data.value);
+            setJsonData(parsed);
+            setFields(parsed.fields || []);
+          } catch (err) {
+            console.error("Invalid Sitecore value received:", err);
+          }
+          break;
+
+        case "set-locators":
+          console.log("Locator message received:", event.data.locators);
+          break;
+
+        default:
+          // Ignore unknown messages
+          break;
       }
     };
 
