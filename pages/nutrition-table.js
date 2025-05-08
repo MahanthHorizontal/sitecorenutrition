@@ -1,27 +1,35 @@
 import { useEffect, useState } from "react";
 import Head from "next/head";
 
-
 export default function NutritionTable() {
   const [jsonData, setJsonData] = useState(null);
   const [fields, setFields] = useState([]);
 
   useEffect(() => {
-    const rawValue = window.frameElement?.getAttribute("sc_value") || "{}";
-    try {
-      const parsed = JSON.parse(rawValue);
-      setJsonData(parsed);
-      setFields(parsed.fields || []);
-    } catch (err) {
-      console.error("Failed to parse Sitecore field value", err);
-    }
+    // Request Sitecore value from parent
+    window.parent.postMessage({ type: "get-sc-value" }, "*");
+
+    const handleMessage = (event) => {
+      if (event.data?.type === "sc-value-response") {
+        try {
+          const parsed = JSON.parse(event.data.value);
+          setJsonData(parsed);
+          setFields(parsed.fields || []);
+        } catch (err) {
+          console.error("Invalid Sitecore value received:", err);
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
   }, []);
 
   useEffect(() => {
+    if (!jsonData) return;
     const interval = setInterval(() => {
-      if (!jsonData) return;
       const updated = JSON.stringify({ ...jsonData, fields });
-      window.frameElement?.setAttribute("sc_value", updated);
+      window.parent.postMessage({ type: "set-sc-value", value: updated }, "*");
     }, 1000);
     return () => clearInterval(interval);
   }, [fields, jsonData]);
