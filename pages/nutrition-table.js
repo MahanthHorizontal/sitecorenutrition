@@ -3,8 +3,8 @@ import Head from "next/head";
 import { v4 as uuidv4 } from "uuid";
 
 export default function NutritionTable() {
-  const [jsonData, setJsonData] = useState<any>(null);
-  const [fields, setFields] = useState<any[]>([]);
+  const [jsonData, setJsonData] = useState(null);
+  const [fields, setFields] = useState([]);
 
   useEffect(() => {
     const rawValue = window.frameElement?.getAttribute("sc_value") || "{}";
@@ -26,13 +26,13 @@ export default function NutritionTable() {
     return () => clearInterval(interval);
   }, [fields, jsonData]);
 
-  const updateFieldValue = (key: string, value: any) => {
+  const updateFieldValue = (key, value) => {
     const newFields = fields.map((field) => {
       if (field.key === key) {
         return { ...field, value };
       }
       if (field.type === 'repeater') {
-        const updatedSubFields = field.sub_fields.map((sf: any) =>
+        const updatedSubFields = field.sub_fields.map((sf) =>
           sf.key === key ? { ...sf, value } : sf
         );
         return { ...field, sub_fields: updatedSubFields };
@@ -42,11 +42,11 @@ export default function NutritionTable() {
     setFields(newFields);
   };
 
-  const addRepeaterRow = (repeaterField: any) => {
-    const rowIndex = Math.max(...repeaterField.sub_fields.map((sf: any) => sf.row || 0)) + 1;
+  const addRepeaterRow = (repeaterField) => {
+    const rowIndex = Math.max(...repeaterField.sub_fields.map((sf) => sf.row || 0)) + 1;
     const newSubFields = repeaterField.sub_fields
-      .filter((sf: any) => sf.row === 0)
-      .map((sf: any) => ({
+      .filter((sf) => sf.row === 0)
+      .map((sf) => ({
         ...sf,
         key: uuidv4(),
         value: '',
@@ -65,12 +65,12 @@ export default function NutritionTable() {
     setFields(newFields);
   };
 
-  const deleteRepeaterRow = (repeaterField: any, row: number) => {
+  const deleteRepeaterRow = (repeaterField, row) => {
     const newFields = fields.map((field) => {
       if (field.key === repeaterField.key) {
         return {
           ...field,
-          sub_fields: field.sub_fields.filter((sf: any) => sf.row !== row)
+          sub_fields: field.sub_fields.filter((sf) => sf.row !== row)
         };
       }
       return field;
@@ -78,9 +78,9 @@ export default function NutritionTable() {
     setFields(newFields);
   };
 
-  const renderRepeater = (field: any) => {
-    const rows: { [key: number]: any[] } = {};
-    field.sub_fields.forEach((sf: any) => {
+  const renderRepeater = (field) => {
+    const rows = {};
+    field.sub_fields.forEach((sf) => {
       if (!rows[sf.row]) rows[sf.row] = [];
       rows[sf.row].push(sf);
     });
@@ -92,7 +92,7 @@ export default function NutritionTable() {
           <thead>
             <tr>
               <th>#</th>
-              {rows[0]?.map((sf: any, i: number) => (
+              {rows[0]?.map((sf, i) => (
                 <th key={i}>{sf.label}</th>
               ))}
               <th>Actions</th>
@@ -102,7 +102,7 @@ export default function NutritionTable() {
             {Object.entries(rows).map(([rowIndex, rowFields]) => (
               <tr key={rowIndex}>
                 <td>{parseInt(rowIndex) + 1}</td>
-                {rowFields.map((sf: any) => (
+                {rowFields.map((sf) => (
                   <td key={sf.key}>
                     <input
                       type="text"
@@ -149,7 +149,7 @@ export default function NutritionTable() {
         <form id="nutrition_table_form">
           <h1 className="mb-4">Nutrition Table</h1>
           <div id="fields">
-            {fields.map((field: any) => {
+            {fields.map((field) => {
               if (field.type === "text") {
                 return (
                   <div className="form-group" key={field.key}>
