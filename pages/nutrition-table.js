@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Head from "next/head";
-import { v4 as uuidv4 } from "uuid";
+
 
 export default function NutritionTable() {
   const [jsonData, setJsonData] = useState(null);
