@@ -2,10 +2,8 @@ import { useEffect, useState } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 
-
 export default function NutritionTable() {
-  const [jsonData, setJsonData] = useState(null);
-  const [fields, setFields] = useState([]);
+  const [formData, setFormData] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -15,53 +13,167 @@ export default function NutritionTable() {
 
       const query = `
         query {
-          item(id: "${id}", language: "en") {
-            id
-            name
-            fields {
-              name
+          item(language:"en", path:"${id}"){
+            field(name:"nutrition") {
               value
             }
           }
         }
       `;
 
-      const res = await fetch("https://xmcloudcm.localhost/sitecore/api/graph/edge", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "sc_apikey": "94FE5BDC-BC07-448E-A63C-812FB5974D2E",
-        },
-        body: JSON.stringify({ query }),
-      });
+      const res = await fetch(
+        "https://xmcloudcm.localhost/sitecore/api/graph/edge",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            sc_apikey: "94FE5BDC-BC07-448E-A63C-812FB5974D2E",
+          },
+          body: JSON.stringify({
+            query,
+            variables: {
+              path: `${id}`,
+            },
+          }),
+        }
+      );
 
       const result = await res.json();
-      if (result?.data?.item) {
-        const fieldData = result.data.item.fields.map((f) => ({
-          key: f.name,
-          name: f.name,
-          label: f.name,
-          type: "text",
-          value: f.value,
-        }));
-        setJsonData(result.data.item);
-        setFields(fieldData);
+
+      const nutritionValue = result?.data?.item?.field?.value;
+
+      if (nutritionValue) {
+        try {
+          const nutritionValue = result?.data?.item?.field?.value;
+          let parsed = nutritionValue;
+          const parsedClone = JSON.parse(parsed);
+          setFormData(parsedClone);
+        } catch (err) {
+          console.error("Failed to parse nutrition data:", err);
+        }
       }
     };
 
     fetchData();
   }, [router.query]);
 
-  const updateFieldValue = (key, value) => {
-    const newFields = fields.map((field) => {
-      if (field.key === key) {
-        return { ...field, value };
-      }
-      return field;
-    });
-    setFields(newFields);
+  const renderField = (field, index) => {
+    switch (field.type) {
+      case "text":
+        return (
+          <div key={field.key} className="form-group">
+            <label htmlFor={field.name}>{field.label}</label>
+            <input
+              type="text"
+              name={field.name}
+              defaultValue={field.value || ""}
+              className="form-control"
+              required={field.required}
+            />
+            {field.instructions && (
+              <small className="form-text text-muted">
+                {field.instructions}
+              </small>
+            )}
+          </div>
+        );
+      case "true_false":
+        return (
+          <div key={field.key} className="form-group form-check">
+            <input
+              type="checkbox"
+              className="form-check-input"
+              id={field.name}
+              name={field.name}
+              defaultChecked={field.value}
+            />
+            <label className="form-check-label" htmlFor={field.name}>
+              {field.label}
+            </label>
+            {field.instructions && (
+              <small className="form-text text-muted">
+                {field.instructions}
+              </small>
+            )}
+          </div>
+        );
+      case "repeater":
+        return (
+          <div key={field.key} className="form-group">
+            <label>{field.label}</label>
+            {field.instructions && (
+              <small className="form-text text-muted">
+                {field.instructions}
+              </small>
+            )}
+            <table className="table table-bordered table-hover">
+              <thead>
+                <tr>
+                  <th className="text-center">#</th>
+                  {field.sub_fields.map((subField, subIndex) => (
+                    <th key={subIndex} className="text-center">
+                      <label>{subField.label}</label>
+                      {subField.instructions &&
+                        ((<br />),
+                        (
+                          <small className="form-text text-muted">
+                            {subField.instructions}
+                          </small>
+                        ))}
+                    </th>
+                  ))}
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {Array.isArray(field.value) &&
+                  field.value.map((row, rowIndex) => (
+                    <tr key={rowIndex}>
+                      <td>{rowIndex + 1}</td>
+                      {field.sub_fields.map((subField) => (
+                        <td key={subField.key}>
+                          {subField.type === "true_false" ? (
+                            <input
+                              type="checkbox"
+                              name={`${subField.name}_${rowIndex}`}
+                              defaultChecked={row[subField.name]}
+                              className="form-check-input text-center"
+                            />
+                          ) : (
+                            <input
+                              type="text"
+                              name={`${subField.name}_${rowIndex}`}
+                              defaultValue={row[subField.name] || ""}
+                              className="form-control input-md"
+                            />
+                          )}
+                        </td>
+                      ))}
+                      <td>
+                        <button
+                          type="button"
+                          className="btn btn-outline-danger btn-sm"
+                          style={{ borderColor: "#bf1818" }}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+            <button
+              type="button"
+              className="btn btn-info float-right mb-3 text-white"
+            >
+              Add a {field.label}
+            </button>
+          </div>
+        );
+      default:
+        return null;
+    }
   };
-
   return (
     <>
       <Head>
@@ -72,23 +184,9 @@ export default function NutritionTable() {
         />
       </Head>
       <div className="container mt-4">
-        <form id="nutrition_table_form">
+        <form>
           <h1 className="mb-4">Nutrition Table</h1>
-          <div id="fields">
-            {fields.map((field) => (
-              <div className="form-group" key={field.key}>
-                <label htmlFor={field.name}>{field.label}</label>
-                <input
-                  type="text"
-                  id={field.key}
-                  name={field.name}
-                  className="form-control"
-                  value={field.value || ""}
-                  onChange={(e) => updateFieldValue(field.key, e.target.value)}
-                />
-              </div>
-            ))}
-          </div>
+          {formData?.fields?.map((field, index) => renderField(field, index))}
         </form>
       </div>
     </>
