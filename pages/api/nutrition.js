@@ -1,6 +1,32 @@
-export default async function handler(req, res) {
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+const getAccessToken = async () => {
+  const body = new URLSearchParams();
+  body.append("client_id", "TJO59TLu5gk6ee8pJQbKeTdRFbQhP5gN");
+  body.append(
+    "client_secret",
+    "o3VHu63FmBvn0PgGbueW7VkSxgZ1bedyg54OrZlDzXiPkBBiQTqiU8yrX1lZ_moa"
+  );
+  body.append("audience", "https://api.sitecorecloud.io");
+  body.append("grant_type", "client_credentials");
+  const response = await fetch("https://auth.sitecorecloud.io/oauth/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: body.toString(),
+  });
 
+  const data = await response.json();
+  console.log("data", data);
+  if (!response.ok) {
+    throw new Error(
+      `OAuth token request failed: ${data.error || "Unknown error"}`
+    );
+  }
+
+  return data.access_token;
+};
+
+export default async function handler(req, res) {
   console.log("request method", req.method);
   if (req.method === "GET") {
     const { id } = req.query;
@@ -85,14 +111,15 @@ export default async function handler(req, res) {
         `;
     console.log("mutation", mutation);
     try {
+      const token = await getAccessToken();
+
       const apiRes = await fetch(
-        "https://xmcloudcm.localhost/sitecore/api/authoring/graphql/v1",
+        "https://xmc-horizontalda819-training0523fbe-devb018.sitecorecloud.io/sitecore/api/authoring/graphql/v1",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization:
-              "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InpnbnhyQk9IaXJ0WXp4dnl1WVhNZyJ9.eyJodHRwczovL2F1dGguc2l0ZWNvcmVjbG91ZC5pby9jbGFpbXMvZW1haWwiOiJtbWFkYXJhbXBhbGxpQGhvcml6b250YWwuY29tIiwiaHR0cHM6Ly9hdXRoLnNpdGVjb3JlY2xvdWQuaW8vY2xhaW1zL3JvbGVzIjpbIltPcmdhbml6YXRpb25dXFxPcmdhbml6YXRpb24gQWRtaW4iXSwiaHR0cHM6Ly9hdXRoLnNpdGVjb3JlY2xvdWQuaW8vY2xhaW1zL2NsaWVudF9uYW1lIjoiWE0gQ2xvdWQgRGVwbG95IChDTEkpIiwiaHR0cHM6Ly9hdXRoLnNpdGVjb3JlY2xvdWQuaW8vY2xhaW1zL29yZ19pZCI6Im9yZ196dDFrbUFGdjRQdlJOdkE1IiwiaHR0cHM6Ly9hdXRoLnNpdGVjb3JlY2xvdWQuaW8vY2xhaW1zL29yZ19uYW1lIjoic2h1cmUtaW5jb3Jwb3JhdGVkLTEiLCJodHRwczovL2F1dGguc2l0ZWNvcmVjbG91ZC5pby9jbGFpbXMvb3JnX2Rpc3BsYXlfbmFtZSI6IlNodXJlIEluY29ycG9yYXRlZCIsImh0dHBzOi8vYXV0aC5zaXRlY29yZWNsb3VkLmlvL2NsYWltcy9vcmdfYWNjb3VudF9pZCI6IjAwMTFOMDAwMDFVdEdwTVFBViIsImh0dHBzOi8vYXV0aC5zaXRlY29yZWNsb3VkLmlvL2NsYWltcy9vcmdfdHlwZSI6ImN1c3RvbWVyIiwic2Nfb3JnX3JlZ2lvbiI6InVzZSIsImlzcyI6Imh0dHBzOi8vYXV0aC5zaXRlY29yZWNsb3VkLmlvLyIsInN1YiI6ImF1dGgwfDYzMThhZmY3MmQ4NzFkZjlkZWY2ODliNiIsImF1ZCI6WyJodHRwczovL2FwaS5zaXRlY29yZWNsb3VkLmlvIiwiaHR0cHM6Ly9vbmUtc2MtcHJvZHVjdGlvbi5ldS5hdXRoMC5jb20vdXNlcmluZm8iXSwiaWF0IjoxNzQ2OTk4MTE5LCJleHAiOjE3NDcwODQ1MTksInNjb3BlIjoib3BlbmlkIGVtYWlsIHByb2ZpbGUgb2ZmbGluZV9hY2Nlc3MgaWFtLnVzcl9yb2xlczpyIHhtY2xvdWRkZXBsb3kucHJvamVjdHM6bWFuYWdlIHhtY2xvdWRkZXBsb3kuZW52aXJvbm1lbnRzOm1hbmFnZSB4bWNsb3VkZGVwbG95Lm9yZ2FuaXphdGlvbnM6bWFuYWdlIHhtY2xvdWRkZXBsb3kuZGVwbG95bWVudHM6bWFuYWdlIHhtY2xvdWRkZXBsb3kubW9uaXRvcmluZy5kZXBsb3ltZW50czpyZWFkIHhtY2xvdWRkZXBsb3kuY2xpZW50czptYW5hZ2UgeG1jbG91ZGRlcGxveS5zb3VyY2Vjb250cm9sOm1hbmFnZSB4bWNsb3VkZGVwbG95LnJoOm1uZyB4bWNsb3VkZGVwbG95LnNpdGU6bW5nIHBsYXRmb3JtLnRlbmFudHM6bGlzdGFsbCIsImF6cCI6IkNoaThFd2ZGbkVlamtzazNTZWQ5aGxhbEdpTTlCMnY3In0.gFoyQ7n4L8n_BMV9AzD1oY0EVc8JZK7ps9SllzacACnvgzMspMzWB6rmTkfkz7CXt4QtVwGkp-xH10YUlC1blZ1sKxCLHdjabFYXmOxMxl3iEs3dZIODXztuU0UHV-jtisubSLaRVRvRCq7HhWhZtZW6qH7ZCZUZLRgTcJXJmntVnvqqwt86mg9ANmtYoNSSULhLci76KaTsM-ekZJ-gc9POWWdLnqFNv1H9glHkt3J_zwb-3wF1nw019k8Jt2OZxA1RJlJnqn214g8TShBPFaVS9i2Uu6UDpws1lmLEQG_RPavb5s3zNToi_f1c5gnkjLTgchqT9JvX1mjOH7lhCg",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ query: mutation }),
         }
