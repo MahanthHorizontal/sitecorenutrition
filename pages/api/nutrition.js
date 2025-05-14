@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     try {
       console.log("isnide thus");
       const response = await fetch(
-        "https://xmc-horizontalda819-training0523fbe-devb018.sitecorecloud.io/",
+        "https://xmc-horizontalda819-training0523fbe-devb018.sitecorecloud.io/sitecore/api/graph/edge",
         {
           method: "POST",
           headers: {
