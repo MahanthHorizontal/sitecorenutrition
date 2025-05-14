@@ -23,12 +23,12 @@ export default async function handler(req, res) {
     try {
       console.log("isnide thus");
       const response = await fetch(
-        "https://xmcloudcm.localhost/sitecore/api/graph/edge",
+        "https://xmc-horizontalda819-training0523fbe-devb018.sitecorecloud.io/",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            sc_apikey: "94FE5BDC-BC07-448E-A63C-812FB5974D2E",
+            sc_apikey: "A725D2B5-05F0-4365-954F-03D7480FE85A",
           },
           body: JSON.stringify({ query }),
         }
@@ -63,7 +63,7 @@ export default async function handler(req, res) {
     if (!id || !data) {
       return res.status(400).json({ message: "Missing id or data in body" });
     }
-
+    console.log("id", id);
     const mutation = `
           mutation {
             updateItem(
@@ -72,7 +72,7 @@ export default async function handler(req, res) {
                 fields: [
                   {
                     name: "nutrition",
-                    value: "asdsa"}
+                    value: "asdsa"
                   }
                 ]
               }
@@ -83,7 +83,7 @@ export default async function handler(req, res) {
             }
           }
         `;
-
+    console.log("mutation", mutation);
     try {
       const apiRes = await fetch(
         "https://xmcloudcm.localhost/sitecore/api/authoring/graphql/v1",
