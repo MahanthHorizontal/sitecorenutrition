@@ -46,7 +46,7 @@ export default async function handler(req, res) {
     try {
       console.log("isnide thus");
       const response = await fetch(
-        "https://xmc-horizontalda819-training0523fbe-devb018.sitecorecloud.io/sitecore/api/graph/edge",
+        process.env.Sitecore_Preview_ApiEndpoint,
         {
           method: "POST",
           headers: {
@@ -115,7 +115,7 @@ export default async function handler(req, res) {
       const token = await getAccessToken();
 
       const apiRes = await fetch(
-        "https://xmc-horizontalda819-training0523fbe-devb018.sitecorecloud.io/sitecore/api/authoring/graphql/v1",
+       process.env.Sitecore_Authoring_ApiEndpoint,
         {
           method: "POST",
           headers: {
