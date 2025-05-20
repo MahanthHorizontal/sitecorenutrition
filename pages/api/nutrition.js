@@ -45,17 +45,14 @@ export default async function handler(req, res) {
 
     try {
       console.log("isnide thus");
-      const response = await fetch(
-        process.env.Sitecore_Preview_ApiEndpoint,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            sc_apikey: process.env.Sitecore_Api_key,
-          },
-          body: JSON.stringify({ query }),
-        }
-      );
+      const response = await fetch(process.env.Sitecore_Preview_ApiEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          sc_apikey: process.env.Sitecore_Api_key,
+        },
+        body: JSON.stringify({ query }),
+      });
 
       const result = await response.json();
       console.log("result returned", result);
@@ -110,21 +107,18 @@ export default async function handler(req, res) {
         }
       }
     `;
-
+    console.log("mutation", JSON.stringify(mutation));
     try {
       const token = await getAccessToken();
 
-      const apiRes = await fetch(
-       process.env.Sitecore_Authoring_ApiEndpoint,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ query: mutation }),
-        }
-      );
+      const apiRes = await fetch(process.env.Sitecore_Authoring_ApiEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ query: mutation }),
+      });
 
       const result = await apiRes.json();
       console.log("result", JSON.stringify(result));
