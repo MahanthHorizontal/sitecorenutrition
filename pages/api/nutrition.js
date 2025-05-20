@@ -1,7 +1,6 @@
 const getAccessToken = async () => {
   const body = new URLSearchParams();
   body.append("client_id", process.env.AuthoringClientID);
-  body.append("client_secret", process.env.process.env.AuthoringSecretKey);
   body.append("client_secret", process.env.AuthoringSecretKey);
   body.append("audience", "https://api.sitecorecloud.io");
   body.append("grant_type", "client_credentials");
