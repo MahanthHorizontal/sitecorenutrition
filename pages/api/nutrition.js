@@ -1,6 +1,7 @@
 const getAccessToken = async () => {
   const body = new URLSearchParams();
   body.append("client_id", process.env.AuthoringClientID);
+  body.append("client_secret", process.env.process.env.AuthoringSecretKey);
   body.append("client_secret", process.env.AuthoringSecretKey);
   body.append("audience", "https://api.sitecorecloud.io");
   body.append("grant_type", "client_credentials");
@@ -45,14 +46,17 @@ export default async function handler(req, res) {
 
     try {
       console.log("isnide thus");
-      const response = await fetch(process.env.Sitecore_Preview_ApiEndpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          sc_apikey: process.env.Sitecore_Api_key,
-        },
-        body: JSON.stringify({ query }),
-      });
+      const response = await fetch(
+        "https://xmc-horizontalda819-training0523fbe-devb018.sitecorecloud.io/sitecore/api/graph/edge",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            sc_apikey: process.env.Sitecore_Api_key,
+          },
+          body: JSON.stringify({ query }),
+        }
+      );
 
       const result = await response.json();
       console.log("result returned", result);
@@ -107,18 +111,21 @@ export default async function handler(req, res) {
         }
       }
     `;
-    console.log("mutation", JSON.stringify(mutation));
+
     try {
       const token = await getAccessToken();
 
-      const apiRes = await fetch(process.env.Sitecore_Authoring_ApiEndpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ query: mutation }),
-      });
+      const apiRes = await fetch(
+        "https://xmc-horizontalda819-training0523fbe-devb018.sitecorecloud.io/sitecore/api/authoring/graphql/v1",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ query: mutation }),
+        }
+      );
 
       const result = await apiRes.json();
       console.log("result", JSON.stringify(result));
